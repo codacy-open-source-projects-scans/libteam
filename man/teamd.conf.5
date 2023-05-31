@@ -1,0 +1,571 @@
+.TH TEAMD.CONF 5 "2013-07-09" "libteam" "Team daemon configuration"
+.SH NAME
+teamd.conf \(em libteam daemon configuration file
+.SH DESCRIPTION
+.PP
+teamd uses JSON format configuration.
+.SH OPTIONS
+.TP
+.BR "device " (string)
+Desired name of new team device.
+.TP
+.BR "debug_level " (int)
+Level of debug messages. The higher it is the more debug messages will be printed. It is the same as adding "-g" command line options.
+.RS 7
+.PP
+Default:
+.BR "0"
+(disabled)
+.RE
+.TP
+.BR "hwaddr " (string)
+Desired hardware address of new team device. Usual MAC address format is accepted.
+.TP
+.BR "runner.name " (string)
+Name of team device. The following runners are available:
+.RS 7
+.PP
+.BR "broadcast "\(em
+Simple runner which directs the team device to transmit packets via all ports.
+.PP
+.BR "roundrobin "\(em
+Simple runner which directs the team device to transmits packets in a round-robin fashion.
+.PP
+.BR "random "\(em
+Simple runner which directs the team device to transmits packets on a randomly selected port.
+.PP
+.BR "activebackup "\(em
+Watches for link changes and selects active port to be used for data transfers.
+.PP
+.BR "loadbalance "\(em
+To do passive load balancing, runner only sets up BPF hash function which will determine port for packet transmit. To do active load balancing, runner moves hashes among available ports trying to reach perfect balance.
+.PP
+.BR "lacp "\(em
+Implements 802.3ad LACP protocol. Can use same Tx port selection possibilities as loadbalance runner.
+.PP
+Default:
+.BR "roundrobin"
+.RE
+.TP
+.BR "notify_peers.count " (int)
+Number of bursts of unsolicited NAs and gratuitous ARP packets sent after port is enabled or disabled.
+.RS 7
+.PP
+Default:
+.BR "0"
+(disabled)
+.PP
+Default for activebackup runner:
+.BR "1"
+.RE
+.TP
+.BR "notify_peers.interval " (int)
+Value is positive number in milliseconds. Specifies an interval between bursts of notify-peer packets.
+.RS 7
+.PP
+Default:
+.BR "0"
+.RE
+.TP
+.BR "mcast_rejoin.count " (int)
+Number of bursts of multicast group rejoin requests sent after port is enabled or disabled.
+.RS 7
+.PP
+Default:
+.BR "0"
+(disabled)
+.PP
+Default for activebackup runner:
+.BR "1"
+.RE
+.TP
+.BR "mcast_rejoin.interval " (int)
+Value is positive number in milliseconds. Specifies an interval between bursts of multicast group rejoin requests.
+.RS 7
+.PP
+Default:
+.BR "0"
+.RE
+.TP
+.BR "link_watch.name "| " ports.PORTIFNAME.link_watch.name " (string)
+Name of link watcher to be used. The following link watchers are available:
+.RS 7
+.PP
+.BR "ethtool "\(em
+Uses Libteam lib to get port ethtool state changes.
+.PP
+.BR "arp_ping "\(em
+ARP requests are sent through a port. If an ARP reply is received, the link is considered to be up.
+.PP
+.BR "nsna_ping "\(em
+Similar to the previous, except that it uses IPv6 Neighbor Solicitation / Neighbor Advertisement mechanism. This is an alternative to arp_ping and becomes handy in pure-IPv6 environments.
+.RE
+.TP
+.BR "ports " (object)
+List of ports, network devices, to be used in a team device.
+.RS 7
+.PP
+See examples for more information.
+.RE
+.TP
+.BR "ports.PORTIFNAME.queue_id " (int)
+ID of queue which this port should be mapped to.
+.RS 7
+.PP
+Default:
+.BR "None"
+.RE
+.SH ACTIVE-BACKUP RUNNER SPECIFIC OPTIONS
+.TP
+.BR "runner.hwaddr_policy " (string)
+This defines the policy of how hardware addresses of team device and port devices should be set during the team lifetime. The following are available:
+.RS 7
+.PP
+.BR "same_all "\(em
+All ports will always have the same hardware address as the associated team device.
+.PP
+.BR "by_active "\(em
+Team device adopts the hardware address of the currently active port. This is useful when the port device is not able to change its hardware address.
+.PP
+.BR "only_active "\(em
+Only the active port adopts the hardware address of the team device. The others have their own.
+.PP
+Default:
+.BR "same_all"
+.RE
+.PP
+.TP
+.BR "ports.PORTIFNAME.prio " (int)
+Port priority. The higher number means higher priority.
+.RS 7
+.PP
+Default:
+.BR "0"
+.RE
+.TP
+.BR "ports.PORTIFNAME.sticky " (bool)
+Flag which indicates if the port is sticky. If set, it means the port does not get unselected if another port with higher priority or better parameters becomes available.
+.RS 7
+.PP
+Default:
+.BR "false"
+.RE
+.SH LOAD BALANCE RUNNER SPECIFIC OPTIONS
+.TP
+.BR "runner.tx_hash " (array)
+List of fragment types (strings) which should be used for packet Tx hash computation. The following are available:
+.RS 7
+.PP
+.BR "eth "\(em
+Uses source and destination MAC addresses.
+.PP
+.BR "vlan "\(em
+Uses VLAN id.
+.PP
+.BR "ipv4 "\(em
+Uses source and destination IPv4 addresses.
+.PP
+.BR "ipv6 "\(em
+Uses source and destination IPv6 addresses.
+.PP
+.BR "ip "\(em
+Uses source and destination IPv4 and IPv6 addresses.
+.PP
+.BR "l3 "\(em
+Uses source and destination IPv4 and IPv6 addresses.
+.PP
+.BR "tcp "\(em
+Uses source and destination TCP ports.
+.PP
+.BR "udp "\(em
+Uses source and destination UDP ports.
+.PP
+.BR "sctp "\(em
+Uses source and destination SCTP ports.
+.PP
+.BR "l4 "\(em
+Uses source and destination TCP and UDP and SCTP ports.
+.PP
+Default:
+.B
+["eth", "ipv4", "ipv6"]
+.RE
+.TP
+.BR "runner.tx_balancer.name " (string)
+Name of active Tx balancer. Active Tx balancing is disabled by default. The only value available is
+.BR "basic".
+.RS 7
+.PP
+Default:
+.BR "None"
+.RE
+.TP
+.BR "runner.tx_balancer.balancing_interval " (int)
+In tenths of a second. Periodic interval between rebalancing.
+.RS 7
+.PP
+Default:
+.BR "50"
+.RE
+.SH LACP RUNNER SPECIFIC OPTIONS
+.TP
+.BR "runner.active " (bool)
+If active is
+.BR "true"
+LACPDU frames are sent along the configured links periodically. If not, it acts as "speak when spoken to".
+.RS 7
+.PP
+Default:
+.BR "true"
+.RE
+.PP
+.TP
+.BR "runner.fast_rate " (bool)
+Option specifies the rate at which our link partner is asked to transmit LACPDU packets. If this is
+.BR "true"
+then packets will be sent once per second. Otherwise they will be sent every 30 seconds.
+.RS 7
+.PP
+Default:
+.BR "false"
+.RE
+.TP
+.BR "runner.tx_hash " (array)
+Same as for load balance runner.
+.TP
+.BR "runner.tx_balancer.name " (string)
+Same as for load balance runner.
+.TP
+.BR "runner.tx_balancer.balancing_interval " (int)
+Same as for load balance runner.
+.TP
+.BR "runner.sys_prio " (int)
+System priority, value can be 0 \(en 65535.
+.RS 7
+.PP
+Default:
+.BR "65535"
+.RE
+.TP
+.BR "runner.min_ports " (int)
+Specifies the minimum number of ports that must be active before asserting carrier in the master interface, value can be 1 \(en 1024.
+.RS 7
+.PP
+Default:
+.BR "1"
+.RE
+.TP
+.BR "runner.agg_select_policy " (string)
+This selects the policy of how the aggregators will be selected. The following are available:
+.RS 7
+.PP
+.BR "lacp_prio "\(em
+Aggregator with highest priority according to LACP standard will be selected. Aggregator priority is affected by per-port option
+.BR "lacp_prio".
+.PP
+.BR "lacp_prio_stable "\(em
+Same as previous one, except do not replace selected aggregator if it is still usable.
+.PP
+.BR "bandwidth "\(em
+Select aggregator with highest total bandwidth.
+.PP
+.BR "count "\(em
+Select aggregator with highest number of ports.
+.PP
+.BR "port_config "\(em
+Aggregator with highest priority according to per-port options
+.BR "prio " and
+.BR "sticky "
+will be selected. This means that the aggregator containing the port with the highest priority will be selected unless at least one of the ports in the currently selected aggregator is sticky.
+.PP
+Default:
+.BR "lacp_prio"
+.RE
+.TP
+.BR "ports.PORTIFNAME.lacp_prio " (int)
+Port priority according to LACP standard. The lower number means higher priority.
+.RS 7
+.PP
+Default:
+.BR "255"
+.RE
+.TP
+.BR "ports.PORTIFNAME.lacp_key " (int)
+Port key according to LACP standard. It is only possible to aggregate ports with the same key.
+.RS 7
+.PP
+Default:
+.BR "0"
+.RE
+.PP
+.SH ETHTOOL LINK WATCH SPECIFIC OPTIONS
+.TP
+.BR "link_watch.delay_up "| " ports.PORTIFNAME.link_watch.delay_up " (int)
+Value is a positive number in milliseconds. It is the delay between the link coming up and the runner being notified about it.
+.RS 7
+.PP
+Default:
+.BR "0"
+.RE
+.TP
+.BR "link_watch.delay_down "| " ports.PORTIFNAME.link_watch.delay_down " (int)
+Value is a positive number in milliseconds. It is the delay between the link going down and the runner being notified about it.
+.RS 7
+.PP
+Default:
+.BR "0"
+.RE
+.PP
+.SH ARP PING LINK WATCH SPECIFIC OPTIONS
+.TP
+.BR "link_watch.interval "| " ports.PORTIFNAME.link_watch.interval " (int)
+Value is a positive number in milliseconds. It is the interval between ARP requests being sent.
+.RS 7
+.PP
+Default:
+.BR "1000"
+.RE
+.TP
+.BR "link_watch.init_wait "| " ports.PORTIFNAME.link_watch.init_wait " (int)
+Value is a positive number in milliseconds. It is the delay between link watch initialization and the first ARP request being sent.
+.RS 7
+.PP
+Default:
+.BR "0"
+.RE
+.TP
+.BR "link_watch.missed_max "| " ports.PORTIFNAME.link_watch.missed_max " (int)
+Maximum number of missed ARP replies. If this number is exceeded, link is reported as down.
+.RS 7
+.PP
+Default:
+.BR "3"
+.RE
+.TP
+.BR "link_watch.source_host "| " ports.PORTIFNAME.link_watch.source_host " (hostname)
+Hostname to be converted to IP address which will be filled into ARP request as source address.
+.RS 7
+.PP
+Default:
+.BR "0.0.0.0"
+.RE
+.TP
+.BR "link_watch.target_host "| " ports.PORTIFNAME.link_watch.target_host " (hostname)
+Hostname to be converted to IP address which will be filled into ARP request as destination address.
+.TP
+.BR "link_watch.validate_active "| " ports.PORTIFNAME.link_watch.validate_active " (bool)
+Validate received ARP packets on active ports. If this is not set, all incoming ARP packets will be considered as a good reply.
+.RS 7
+.PP
+Default:
+.BR "false"
+.RE
+.TP
+.BR "link_watch.validate_inactive "| " ports.PORTIFNAME.link_watch.validate_inactive " (bool)
+Validate received ARP packets on inactive ports. If this is not set, all incoming ARP packets will be considered as a good reply.
+.RS 7
+.PP
+Default:
+.BR "false"
+.RE
+.TP
+.BR "link_watch.vlanid "| " ports.PORTIFNAME.link_watch.vlanid " (int)
+By default, ARP requests are sent without VLAN tags. This option causes outgoing ARP requests to be sent with the specified VLAN ID number.
+.RS 7
+.PP
+Default:
+.BR "None"
+.RE
+.TP
+.BR "link_watch.send_always "| " ports.PORTIFNAME.link_watch.send_always " (bool)
+By default, ARP requests are sent on active ports only. This option allows sending even on inactive ports.
+.RS 7
+.PP
+Default:
+.BR "false"
+.PP
+.SH NS/NA PING LINK WATCH SPECIFIC OPTIONS
+.TP
+.BR "link_watch.interval "| " ports.PORTIFNAME.link_watch.interval " (int)
+Value is a positive number in milliseconds. It is the interval between sending NS packets.
+.RS 7
+.PP
+Default:
+.BR "1000"
+.RE
+.TP
+.BR "link_watch.init_wait "| " ports.PORTIFNAME.link_watch.init_wait " (int)
+Value is a positive number in milliseconds. It is the delay between link watch initialization and the first NS packet being sent.
+.TP
+.BR "link_watch.missed_max "| " ports.PORTIFNAME.link_watch.missed_max " (int)
+Maximum number of missed NA reply packets. If this number is exceeded, link is reported as down.
+.RS 7
+.PP
+Default:
+.BR "3"
+.RE
+.TP
+.BR "link_watch.target_host "| " ports.PORTIFNAME.link_watch.target_host " (hostname)
+Hostname to be converted to IPv6 address which will be filled into NS packet as target address.
+.SH EXAMPLES
+.PP
+.nf
+{
+  "device": "team0",
+  "runner": {"name": "roundrobin"},
+  "ports": {"eth1": {}, "eth2": {}}
+}
+.fi
+.PP
+Very basic configuration.
+.PP
+.nf
+{
+  "device": "team0",
+  "runner": {"name": "activebackup"},
+  "link_watch": {"name": "ethtool"},
+  "ports": {
+    "eth1": {
+      "prio": \-10,
+      "sticky": true
+    },
+    "eth2": {
+      "prio": 100
+    }
+  }
+}
+.fi
+.PP
+This configuration uses active-backup runner with ethtool link watcher. Port eth2 has higher priority, but the sticky flag ensures that if eth1 becomes active, it stays active while the link remains up.
+.PP
+.nf
+{
+  "device": "team0",
+  "runner": {"name": "activebackup"},
+  "link_watch": {
+    "name": "ethtool",
+    "delay_up": 2500,
+    "delay_down": 1000
+  },
+  "ports": {
+    "eth1": {
+      "prio": \-10,
+      "sticky": true
+    },
+    "eth2": {
+      "prio": 100
+    }
+  }
+}
+.fi
+.PP
+Similar to the previous one. Only difference is that link changes are not propagated to the runner immediately, but delays are applied.
+.PP
+.nf
+{
+  "device": "team0",
+  "runner": {"name": "activebackup"},
+  "link_watch":	{
+    "name": "arp_ping",
+    "interval": 100,
+    "missed_max": 30,
+    "target_host": "192.168.23.1"
+  },
+  "ports": {
+    "eth1": {
+      "prio": \-10,
+      "sticky": true
+    },
+    "eth2": {
+      "prio": 100
+    }
+  }
+}
+.fi
+.PP
+This configuration uses ARP ping link watch.
+.PP
+.nf
+{
+"device": "team0",
+"runner": {"name": "activebackup"},
+"link_watch": [
+  {
+    "name": "arp_ping",
+    "interval": 100,
+    "missed_max": 30,
+    "target_host": "192.168.23.1"
+  },
+  {
+    "name": "arp_ping",
+    "interval": 50,
+    "missed_max": 20,
+    "target_host": "192.168.24.1"
+  }
+],
+"ports": {
+  "eth1": {
+    "prio": \-10,
+    "sticky": true
+  },
+  "eth2": {
+    "prio": 100
+    }
+  }
+}
+.fi
+.PP
+Similar to the previous one, only this time two link watchers are used at the same time.
+.PP
+.nf
+{
+  "device": "team0",
+  "runner": {
+    "name": "loadbalance",
+    "tx_hash": ["eth", "ipv4", "ipv6"]
+  },
+  "ports": {"eth1": {}, "eth2": {}}
+}
+.fi
+.PP
+Configuration for hash-based passive Tx load balancing.
+.PP
+.nf
+{
+  "device": "team0",
+  "runner": {
+    "name": "loadbalance",
+    "tx_hash": ["eth", "ipv4", "ipv6"],
+    "tx_balancer": {
+      "name": "basic"
+    }
+  },
+  "ports": {"eth1": {}, "eth2": {}}
+}
+.fi
+.PP
+Configuration for active Tx load balancing using basic load balancer.
+.PP
+.nf
+{
+  "device": "team0",
+  "runner": {
+    "name": "lacp",
+    "active": true,
+    "fast_rate": true,
+    "tx_hash": ["eth", "ipv4", "ipv6"]
+  },
+  "link_watch": {"name": "ethtool"},
+  "ports": {"eth1": {}, "eth2": {}}
+}
+.fi
+.PP
+Configuration for connection to LACP capable counterpart.
+.SH SEE ALSO
+.BR teamd (8),
+.BR teamdctl (8),
+.BR teamnl (8),
+.BR bond2team (1)
+.SH AUTHOR
+.PP
+Jiri Pirko is the original author and current maintainer of libteam.

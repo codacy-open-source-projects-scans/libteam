@@ -1,0 +1,35 @@
+# SUBMITTING PATCHES / PULL REQUESTS - README!!! #
+
+All github pull requests will be ignored! Please send the patches to the libteam mailing list, according to "SubmittingPatches" file.
+
+# libteam - Library for controlling team network device #
+
+The purpose of the Team driver is to provide a mechanism to team multiple NICs (ports) into one logical one (teamdev) at L2 layer. The process is called "channel bonding", "Ethernet bonding", "channel teaming", "link aggregation", etc. This is already implemented in the Linux kernel by the bonding driver.
+
+One thing to note is that Team driver project does try to provide the similar functionality as the bonding driver, however architecturally it is quite different from bonding driver. Team driver is modular, userspace driven, very lean and efficient, and it does have some distinct advantages over bonding. The way Team is configured differs dramatically from the way bonding is.
+
+## Install
+
+    $ ./autogen.sh
+    $ ./configure
+    $ make
+    $ sudo make install
+
+## Authors
+
+* Jiri Pirko <jiri@resnulli.us>
+
+## Internet Resources
+
+* Project Home:     http://www.libteam.org/
+* Git Source Tree:  https://github.com/jpirko/libteam/
+* Wiki:             https://github.com/jpirko/libteam/wiki
+* Tutorial:         https://github.com/jpirko/libteam/wiki/Tutorial
+* Documentation:    https://github.com/jpirko/libteam/wiki/Infrastructure-Specification
+
+## License
+
+Copyright (C) 2011-2015 Jiri Pirko <jiri@resnulli.us>
+
+libteam is distributed under GNU Lesser General Public License version 2.1.
+See the file "COPYING" in the source distribution for information on terms & conditions for accessing and otherwise using libteam.
