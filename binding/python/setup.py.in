@@ -1,0 +1,21 @@
+# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+
+from distutils.core import setup, Extension
+
+team = Extension('team/_capi',
+            sources = ['team/capi.i'],
+            include_dirs = ['../../include'],
+            library_dirs = ['../../libteam/.libs'],
+            swig_opts = ['-O', '-nodefaultctor'],
+            libraries = ['team'],
+            )
+
+setup(name = 'team',
+        version = '1.0',
+        description = 'Python wrapper for teaming lib.',
+        author = 'Jiří Župka',
+        author_email = 'jzupka@redhat.com',
+        ext_modules = [team],
+        packages = ['team']
+        )
